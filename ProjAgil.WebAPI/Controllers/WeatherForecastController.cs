@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using ProjAgil.WebAPI.Data;
 using ProjAgil.WebAPI.Model;
 
 namespace ProjAgil.WebAPI.Controllers
@@ -12,63 +15,42 @@ namespace ProjAgil.WebAPI.Controllers
     [Route("api/[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        public readonly DataContext Context;
 
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(DataContext context)
         {
-            _logger = logger;
+            Context = context;
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Evento>> Get()
+        public async Task<IActionResult> Get()
         {
-            return new Evento[] {
-                new Evento() {
-                    EventoId = 1,
-                    Tema = "Angular e .Net Core",
-                    Local = "Aevo",
-                    Lote = "1º Lote",
-                    QtdPessoas = 125,
-                    DataEvento = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy")
-                },
-                new Evento() {
-                    EventoId = 2,
-                    Tema = "Angular e suas Novidades",
-                    Local = "Vitória",
-                    Lote = "2º Lote",
-                    QtdPessoas = 350,
-                    DataEvento = DateTime.Now.AddDays(3).ToString("dd/MM/yyyy")
-                }
-            };
+            try
+            {
+                var results = await Context.Eventos.ToListAsync();
+                return Ok(results);
+            }
+            catch (Exception e)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError,
+                "Erro ao recuperar os eventos");
+            }
         }
 
 
         [HttpGet("{id}")]
-        public ActionResult<Evento> Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return new Evento[] {
-                new Evento() {
-                    EventoId = 1,
-                    Tema = "Angular e .Net Core",
-                    Local = "Aevo",
-                    Lote = "1º Lote",
-                    QtdPessoas = 125,
-                    DataEvento = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy")
-                },
-                new Evento() {
-                    EventoId = 2,
-                    Tema = "Angular e suas Novidades",
-                    Local = "Vitória",
-                    Lote = "2º Lote",
-                    QtdPessoas = 350,
-                    DataEvento = DateTime.Now.AddDays(3).ToString("dd/MM/yyyy")
-                }
-            }.FirstOrDefault(x => x.EventoId == id);
+            try
+            {
+                var results = await Context.Eventos.FirstOrDefaultAsync(x => x.EventoId == id);
+                return Ok(results);
+            }
+            catch (Exception e)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError,
+                "Erro ao recuperar registro do evento");
+            }
         }
 
     }
