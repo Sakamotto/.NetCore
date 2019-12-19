@@ -1,3 +1,40 @@
-bin
-obj
-.DS_Store
+# NuGet Packages
+packages/
+
+# Node Modules
+node_modules/
+
+# Visual Studio Code
+.vscode
+
+# Visual Studio Build Files
+obj/
+Obj/
+bin/
+*.exe
+*.dll
+debug/
+release/
+
+# TypeScript Build
+**/wwwroot/app/
+**/wwwroot/libs/
+
+# Visual Studio
+.vs/
+*.vsprops
+
+# Database Files
+*.ldf
+*.mdf
+
+# Idea Files
+.idea
+.ideia/*
+
+# Others
+*.cache
+*.suo
+*.user
+*.bak
+*.log
