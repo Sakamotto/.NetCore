@@ -30,6 +30,7 @@ namespace ProjAgil.WebAPI
             services.AddDbContext<DataContext>(
                 x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection"))
             );
+            services.AddCors();
             services.AddControllers();
         }
 
@@ -42,6 +43,8 @@ namespace ProjAgil.WebAPI
             }
 
             // app.UseHttpsRedirection();
+
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseRouting();
 
