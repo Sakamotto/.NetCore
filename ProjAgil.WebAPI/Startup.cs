@@ -11,7 +11,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ProjAgil.WebAPI.Data;
+using ProAgil.Repository;
+using ProjAgil.Repository;
 
 namespace ProjAgil.WebAPI
 {
@@ -27,9 +28,12 @@ namespace ProjAgil.WebAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DataContext>(
+            services.AddDbContext<ProAgilContext>(
                 x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection"))
             );
+
+            services.AddScoped<IProAgilRepository, ProAgilRepository>();
+
             services.AddCors();
             services.AddControllers();
         }
@@ -49,6 +53,8 @@ namespace ProjAgil.WebAPI
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {
