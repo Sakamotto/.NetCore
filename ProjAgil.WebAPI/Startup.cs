@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ProAgil.Repository;
 using ProjAgil.Repository;
+using ProjAgil.WebAPI.Utils;
 
 namespace ProjAgil.WebAPI
 {
@@ -35,7 +36,10 @@ namespace ProjAgil.WebAPI
             services.AddScoped<IProAgilRepository, ProAgilRepository>();
 
             services.AddCors();
-            services.AddControllers();
+            
+            services.AddControllers().AddJsonOptions(options => {
+                options.JsonSerializerOptions.Converters.Add(new Int32ToStringConverter());
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
