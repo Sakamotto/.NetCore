@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProAgil.Domain;
 using ProAgil.Repository;
+using ProjAgil.WebAPI.Dtos;
 
 namespace ProjAgil.WebAPI.Controllers
 {
@@ -12,10 +15,12 @@ namespace ProjAgil.WebAPI.Controllers
     public class EventoController : ControllerBase
     {
         public readonly IProAgilRepository Repository;
+        private readonly IMapper Mapper;
 
-        public EventoController(IProAgilRepository repository)
+        public EventoController(IProAgilRepository repository, IMapper mapper)
         {
             Repository = repository;
+            Mapper = mapper;
         }
 
 
@@ -24,13 +29,16 @@ namespace ProjAgil.WebAPI.Controllers
         {
             try
             {
-                var results = await Repository.GetAllEventosAsync(true);
+                var eventos = await Repository.GetAllEventosAsync(true);
+
+                var results = Mapper.Map<IEnumerable<EventoDto>>(eventos);
+
                 return Ok(results);
             }
             catch (Exception e)
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError,
-                "Erro ao recuperar os eventos");
+                $"Erro ao recuperar os eventos: {e.Message}");
             }
         }
 
@@ -40,8 +48,11 @@ namespace ProjAgil.WebAPI.Controllers
         {
             try
             {
-                var results = await Repository.GetEventosAsyncById(EventoId, true);
-                return Ok(results);
+                var evento = await Repository.GetEventosAsyncById(EventoId, true);
+
+                var result = Mapper.Map<EventoDto>(evento);
+
+                return Ok(result);
             }
             catch (Exception e)
             {
@@ -50,12 +61,15 @@ namespace ProjAgil.WebAPI.Controllers
             }
         }
 
-        [HttpGet("{Tema}")]
+        [HttpGet("tema/{Tema}")]
         public async Task<IActionResult> Get(string Tema)
         {
             try
             {
-                var results = await Repository.GetAllEventosAsyncByTema(Tema, true);
+                var eventos = await Repository.GetAllEventosAsyncByTema(Tema, true);
+
+                var results = Mapper.Map<EventoDto[]>(eventos);
+
                 return Ok(results);
             }
             catch (Exception e)
@@ -66,21 +80,22 @@ namespace ProjAgil.WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Evento model)
+        public async Task<IActionResult> Post(EventoDto model)
         {
             try
             {
-                Repository.Add(model);
+                var evento = Mapper.Map<Evento>(model);
+                Repository.Add(evento);
 
                 if (await Repository.SaveChangesAsync())
                 {
-                    return Created($"/api/evento/{model.Id}", model);
+                    return Created($"/api/evento/{evento.Id}", Mapper.Map<EventoDto>(evento));
                 }
             }
             catch (Exception e)
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError,
-                "Erro ao recuperar os eventos");
+                $"Erro ao recuperar os eventos: {e.Message}");
             }
 
             return BadRequest();
@@ -88,7 +103,7 @@ namespace ProjAgil.WebAPI.Controllers
 
 
         [HttpPut("{EventoId}")]
-        public async Task<IActionResult> Put(int EventoId, Evento model)
+        public async Task<IActionResult> Put(int EventoId, EventoDto model)
         {
             try
             {
@@ -99,11 +114,13 @@ namespace ProjAgil.WebAPI.Controllers
                     return NotFound();
                 }
 
-                Repository.Update(model);
+                Mapper.Map(model, evento);
+
+                Repository.Update(evento);
 
                 if (await Repository.SaveChangesAsync())
                 {
-                    return Created($"/api/evento/{model.Id}", model);
+                    return Created($"/api/evento/{evento.Id}", Mapper.Map<EventoDto>(evento));
                 }
             }
             catch (Exception e)
