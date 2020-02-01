@@ -1,7 +1,8 @@
-import { Component, OnInit, TemplateRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { EventoService } from '../services/evento.service';
 import { Evento } from '../models/Evento';
-import { BsModalRef, BsModalService, ModalDirective } from 'ngx-bootstrap';
+import { BsModalRef } from 'ngx-bootstrap';
+import { ToastrService } from 'ngx-toastr';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { defineLocale, BsLocaleService, ptBrLocale } from 'ngx-bootstrap';
 
@@ -13,6 +14,8 @@ defineLocale('pt-br', ptBrLocale);
   styleUrls: ['./eventos.component.css']
 })
 export class EventosComponent implements OnInit {
+
+  public titulo: string = 'Eventos';
 
   public eventosFiltrados: Evento[];
   public eventos: Evento[] = new Array<Evento>();
@@ -30,6 +33,7 @@ export class EventosComponent implements OnInit {
   constructor(private eventoService: EventoService
     , private fb: FormBuilder
     , private localeService: BsLocaleService
+    , private toastr: ToastrService
   ) {
     this.localeService.use('pt-br');
   }
@@ -70,7 +74,7 @@ export class EventosComponent implements OnInit {
         this.eventosFiltrados = this.eventos;
         console.log('Response: ', _eventos);
       }, error => {
-        console.log(error);
+        this.toastr.error('Erro ao tentar carregar od eventos!', 'Erro');
       });
   }
 
@@ -109,18 +113,24 @@ export class EventosComponent implements OnInit {
       this.evento = Object.assign({ id: this.evento.id }, this.registerForm.value);
       this.eventoService.salvarEvento(this.evento, this.modoSalvamento)
         .subscribe((novoEvento: Evento) => {
+          if (this.modoSalvamento === 'editar') {
+            this.toastr.success('Evento editado com sucesso!', 'Sucesso');
+          } else {
+            this.toastr.success('Evento salvo com sucesso!', 'Sucesso');
+          }
           template.hide();
           this.getEventos();
-        }, error => console.log(error));
+        }, error => this.toastr.error('Erro ao salvar informações do evento', 'Erro'));
     }
   }
 
   public confirmarDeleteEvento(template: any) {
     this.eventoService.delete(this.evento.id)
       .subscribe(() => {
+        this.toastr.success('Evento deletado com sucesso!', 'Sucesso');
         template.hide();
         this.getEventos();
-      }, error => console.log(error));
+      }, error => this.toastr.error('Erro ao deletar evento', 'Erro'));
   }
 
 }
