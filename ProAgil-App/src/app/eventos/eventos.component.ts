@@ -30,6 +30,8 @@ export class EventosComponent implements OnInit {
 
   public _filtroLista: string = "";
 
+  public file: File;
+
   constructor(private eventoService: EventoService
     , private fb: FormBuilder
     , private localeService: BsLocaleService
@@ -93,8 +95,9 @@ export class EventosComponent implements OnInit {
   public editarEvento(template: any, evento: Evento) {
     this.openModal(template);
     this.modoSalvamento = 'editar';
-    this.evento = evento;
-    this.registerForm.patchValue(evento);
+    this.evento = Object.assign({}, evento);
+    this.evento.imagemURL = '';
+    this.registerForm.patchValue(this.evento);
   }
 
   public novoEvento(template: any) {
@@ -108,9 +111,18 @@ export class EventosComponent implements OnInit {
     this.openModal(template);
   }
 
+  private uploadImagem() {
+    const nomeArquivo = this.evento.imagemURL.split('\\', 3);
+    this.evento.imagemURL = nomeArquivo[2];
+
+    this.eventoService.postUpload(this.file).subscribe();
+
+  }
+
   public salvarAlteracao(template: any) {
     if (this.registerForm.valid) {
-      this.evento = Object.assign({ id: this.evento.id }, this.registerForm.value);
+      this.evento = Object.assign({ id: this.evento ? this.evento.id : 0 }, this.registerForm.value);
+
       this.eventoService.salvarEvento(this.evento, this.modoSalvamento)
         .subscribe((novoEvento: Evento) => {
           if (this.modoSalvamento === 'editar') {
@@ -131,6 +143,14 @@ export class EventosComponent implements OnInit {
         template.hide();
         this.getEventos();
       }, error => this.toastr.error('Erro ao deletar evento', 'Erro'));
+  }
+
+  public onFileChange(event) {
+    const reader = new FileReader();
+
+    if (event.target.files && event.target.files.length) {
+      this.file = event.target.files;
+    }
   }
 
 }
