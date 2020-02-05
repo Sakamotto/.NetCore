@@ -1,23 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using ProAgil.Domain.Identity;
 using ProAgil.Repository;
 using ProjAgil.Repository;
 using ProjAgil.WebAPI.Utils;
+using System.IO;
 
 namespace ProjAgil.WebAPI
 {
@@ -36,6 +33,56 @@ namespace ProjAgil.WebAPI
             services.AddDbContext<ProAgilContext>(
                 x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection"))
             );
+
+            services.AddIdentity<User, Role>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = false;
+                options.Password.RequireDigit = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequiredLength = 4;
+
+                //options.Lockout.MaxFailedAccessAttempts = 3;
+                //options.Lockout.AllowedForNewUsers = true;
+            })
+            .AddEntityFrameworkStores<ProAgilContext>()
+            .AddDefaultTokenProviders();
+
+
+            //IdentityBuilder builder = services.AddIdentityCore<User>(
+            //    options =>
+            //    {
+            //        options.Password.RequireDigit = false;
+            //        options.Password.RequireNonAlphanumeric = false;
+            //        options.Password.RequireLowercase = false;
+            //        options.Password.RequireUppercase = false;
+            //        options.Password.RequiredLength = 4;
+            //    }
+            //);
+
+            //builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
+
+            //builder.AddEntityFrameworkStores<ProAgilContext>();
+            //builder.AddRoleValidator<RoleValidator<Role>>();
+            //builder.AddRoleManager<RoleManager<Role>>();
+            //builder.AddSignInManager<SignInManager<User>>();
+
+            services.AddMvc(
+                options =>
+                {
+                    var policy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+
+                    options.Filters.Add(new AuthorizeFilter(policy));
+                }
+            )
+            .AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+
 
             services.AddScoped<IProAgilRepository, ProAgilRepository>();
 
