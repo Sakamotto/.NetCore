@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +16,8 @@ using ProAgil.Repository;
 using ProjAgil.Repository;
 using ProjAgil.WebAPI.Utils;
 using System.IO;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace ProjAgil.WebAPI
 {
@@ -48,6 +51,19 @@ namespace ProjAgil.WebAPI
             })
             .AddEntityFrameworkStores<ProAgilContext>()
             .AddDefaultTokenProviders();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
+                            Configuration.GetSection("AppSettings:Token").Value)),
+                        ValidateAudience = false,
+                        ValidateIssuer = false
+                    };
+                });
 
 
             //IdentityBuilder builder = services.AddIdentityCore<User>(
