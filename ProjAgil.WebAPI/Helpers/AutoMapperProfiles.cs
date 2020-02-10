@@ -26,7 +26,7 @@ namespace ProjAgil.WebAPI.Helpers
             CreateMap<Lote, LoteDto>().ReverseMap();
 
             CreateMap<User, UserDto>().ReverseMap();
-            CreateMap<UserLogin, UserLoginDto>().ReverseMap();
+            CreateMap<User, UserLoginDto>().ReverseMap();
         }
     }
 }
