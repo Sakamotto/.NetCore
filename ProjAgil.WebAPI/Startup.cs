@@ -45,44 +45,24 @@ namespace ProjAgil.WebAPI
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequiredLength = 4;
-
-                //options.Lockout.MaxFailedAccessAttempts = 3;
-                //options.Lockout.AllowedForNewUsers = true;
             })
             .AddEntityFrameworkStores<ProAgilContext>()
             .AddDefaultTokenProviders();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters()
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
-                            Configuration.GetSection("AppSettings:Token").Value)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
                         ValidateAudience = false,
                         ValidateIssuer = false
                     };
                 });
-
-
-            //IdentityBuilder builder = services.AddIdentityCore<User>(
-            //    options =>
-            //    {
-            //        options.Password.RequireDigit = false;
-            //        options.Password.RequireNonAlphanumeric = false;
-            //        options.Password.RequireLowercase = false;
-            //        options.Password.RequireUppercase = false;
-            //        options.Password.RequiredLength = 4;
-            //    }
-            //);
-
-            //builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
-
-            //builder.AddEntityFrameworkStores<ProAgilContext>();
-            //builder.AddRoleValidator<RoleValidator<Role>>();
-            //builder.AddRoleManager<RoleManager<Role>>();
-            //builder.AddSignInManager<SignInManager<User>>();
 
             services.AddMvc(
                 options =>
@@ -124,12 +104,11 @@ namespace ProjAgil.WebAPI
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseRouting();
 
-            app.UseAuthorization();
-
             app.UseStaticFiles();
-
             app.UseStaticFiles(new StaticFileOptions()
             {
                 FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
