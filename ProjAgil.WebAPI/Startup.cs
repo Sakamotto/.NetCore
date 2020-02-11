@@ -53,7 +53,13 @@ namespace ProjAgil.WebAPI
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+<<<<<<< HEAD
             }).AddJwtBearer(options =>
+=======
+
+            })
+                .AddJwtBearer(options =>
+>>>>>>> 32b4d8e546702a8fe824a272b55b47fe82ff834d
                 {
                     options.TokenValidationParameters = new TokenValidationParameters()
                     {

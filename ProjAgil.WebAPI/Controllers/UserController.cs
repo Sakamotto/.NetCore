@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using ProAgil.Domain.Identity;
 using ProjAgil.WebAPI.Dtos;
 
@@ -33,12 +38,13 @@ namespace ProjAgil.WebAPI.Controllers
 
 
         [HttpGet("GetUser")]
-        public async Task<IActionResult> GetUser(UserDto userDto)
+        public async Task<IActionResult> GetUser()
         {
-            return Ok(userDto);
+            return Ok(new UserDto());
         }
 
         [HttpPost("Login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(UserLoginDto userLogin)
         {
 
@@ -72,7 +78,33 @@ namespace ProjAgil.WebAPI.Controllers
 
         private async Task<string> GenerateJWToken(User user)
         {
-            return "";
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+
+            var roles = await UserManager.GetRolesAsync(user);
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
+                        Configuration.GetSection("AppSettings:Token").Value));
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
 
         [HttpPost("Register")]
