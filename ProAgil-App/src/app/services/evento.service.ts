@@ -7,14 +7,11 @@ import { Evento } from '../models/Evento';
 export class EventoService {
 
   private baseURL: string = 'http://localhost:5000/api/evento';
-  private tokenHeader: HttpHeaders;
 
-  constructor(private http: HttpClient) { 
-    this.tokenHeader = new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
-  }
+  constructor(private http: HttpClient) { }
 
   getEventos(): Observable<Evento[]> {
-    return this.http.get<Evento[]>(this.baseURL, { headers: this.tokenHeader });
+    return this.http.get<Evento[]>(this.baseURL);
   }
 
   getEventosByTema(tema: string): Observable<Evento[]> {
@@ -27,9 +24,9 @@ export class EventoService {
 
   salvarEvento(evento: Evento, modo: string): Observable<Evento> {
     if (modo === 'salvar') {
-      return this.http.post<Evento>(this.baseURL, evento, { headers: this.tokenHeader });
+      return this.http.post<Evento>(this.baseURL, evento);
     } else {
-      return this.http.put<Evento>(`${this.baseURL}/${evento.id}`, evento, { headers: this.tokenHeader });
+      return this.http.put<Evento>(`${this.baseURL}/${evento.id}`, evento);
     }
   }
 
@@ -42,7 +39,7 @@ export class EventoService {
     const formData = new FormData();
     formData.append('file', fileToUpload, fileToUpload.name);
 
-    return this.http.post(`${this.baseURL}/upload`, formData, { headers: this.tokenHeader });
+    return this.http.post(`${this.baseURL}/upload`, formData);
   }
 
 }
