@@ -4,6 +4,7 @@ import { EventoService } from 'src/app/services/evento.service';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { BsLocaleService } from 'ngx-bootstrap';
 import { ToastrService } from 'ngx-toastr';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-evento-edit',
@@ -16,17 +17,41 @@ export class EventoEditComponent implements OnInit {
   public registerForm: FormGroup;
   public evento: Evento = new Evento();
   public imagemURL = 'assets/img/upload.png';
+  private fileNameToUpdate: string;
+  public dataAtual: string;
 
   constructor(private eventoService: EventoService
     , private fb: FormBuilder
     , private localeService: BsLocaleService
     , private toastr: ToastrService
+    , private activatedRoute: ActivatedRoute
   ) {
     this.localeService.use('pt-br');
   }
 
   ngOnInit() {
     this.validation();
+    this.carregarEvento();
+  }
+
+  public carregarEvento() {
+    const eventoId = +this.activatedRoute.snapshot.paramMap.get('id');
+    this.eventoService.getEventosById(eventoId)
+      .subscribe((evento: Evento) => {
+        this.evento = Object.assign({}, evento);
+        this.fileNameToUpdate = evento.imagemURL.toString();
+        this.imagemURL = `http://localhost:5000/resources/images/${this.evento.imagemURL}?_ts=${this.dataAtual}`;
+        this.evento.imagemURL = '';
+        this.registerForm.patchValue(this.evento);
+
+        this.evento.lotes.forEach(lote => {
+          this.lotes.push(this.criaLote(lote));
+        });
+
+        this.evento.redesSociais.forEach(rede => {
+          this.lotes.push(this.criaRedeSocial(rede));
+        });
+      });
   }
 
   get lotes(): FormArray {
@@ -48,34 +73,36 @@ export class EventoEditComponent implements OnInit {
       telefone: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       imagemURL: [''],
-      lotes: this.fb.array([this.criaLote()]),
-      redesSociais: this.fb.array([this.criaRedeSocial()]),
+      lotes: this.fb.array([]),
+      redesSociais: this.fb.array([]),
     });
   }
 
-  public criaLote(): FormGroup {
+  public criaLote(lote: any): FormGroup {
     return this.fb.group({
-      nome: ['', Validators.required],
-      quantidade: ['', Validators.required],
-      preco: ['', Validators.required],
-      dataInicio: [''],
-      dataFim: ['']
+      id: [lote.id],
+      nome: [lote.nome, Validators.required],
+      quantidade: [lote.quantidade, Validators.required],
+      preco: [lote.preco, Validators.required],
+      dataInicio: [lote.dataInicio],
+      dataFim: [lote.dataFim]
     });
   }
 
-  public criaRedeSocial(): FormGroup {
+  public criaRedeSocial(rede: any): FormGroup {
     return this.fb.group({
-      nome: ['', Validators.required],
-      url: ['', Validators.required]
+      id: [rede.id],
+      nome: [rede.nome, Validators.required],
+      url: [rede.url, Validators.required]
     });
   }
 
   public adicionarLote() {
-    this.lotes.push(this.criaLote());
+    this.lotes.push(this.criaLote({ id: 0 }));
   }
 
   public adicionarRedeSocial() {
-    this.redesSociais.push(this.criaRedeSocial());
+    this.redesSociais.push(this.criaRedeSocial({ id: 0 }));
   }
 
   public removerRedeSocial(id: number) {
