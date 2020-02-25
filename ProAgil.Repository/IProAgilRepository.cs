@@ -12,6 +12,8 @@ namespace ProAgil.Repository
 
      void Delete<T>(T entity) where T: class;
 
+     void DeleteRange<T>(T[] entityArray) where T: class;
+
      Task<bool> SaveChangesAsync();
      
 

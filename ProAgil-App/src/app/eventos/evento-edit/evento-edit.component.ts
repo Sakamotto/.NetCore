@@ -19,6 +19,7 @@ export class EventoEditComponent implements OnInit {
   public imagemURL = 'assets/img/upload.png';
   private fileNameToUpdate: string;
   public dataAtual: string;
+  public file: File;
 
   constructor(private eventoService: EventoService
     , private fb: FormBuilder
@@ -27,6 +28,14 @@ export class EventoEditComponent implements OnInit {
     , private activatedRoute: ActivatedRoute
   ) {
     this.localeService.use('pt-br');
+  }
+
+  get lotes(): FormArray {
+    return <FormArray>this.registerForm.get('lotes');
+  }
+
+  get redesSociais(): FormArray {
+    return <FormArray>this.registerForm.get('redesSociais');
   }
 
   ngOnInit() {
@@ -39,33 +48,26 @@ export class EventoEditComponent implements OnInit {
     this.eventoService.getEventosById(eventoId)
       .subscribe((evento: Evento) => {
         this.evento = Object.assign({}, evento);
-        this.fileNameToUpdate = evento.imagemURL.toString();
+        this.fileNameToUpdate = evento.imagemURL;
         this.imagemURL = `http://localhost:5000/resources/images/${this.evento.imagemURL}?_ts=${this.dataAtual}`;
         this.evento.imagemURL = '';
-        this.registerForm.patchValue(this.evento);
 
+        this.registerForm.patchValue(this.evento);
+        console.log('lotes: ', this.evento.lotes);
         this.evento.lotes.forEach(lote => {
           this.lotes.push(this.criaLote(lote));
         });
 
         this.evento.redesSociais.forEach(rede => {
-          this.lotes.push(this.criaRedeSocial(rede));
+          this.redesSociais.push(this.criaRedeSocial(rede));
         });
       });
   }
 
-  get lotes(): FormArray {
-    const a = this.registerForm.get('lotes') as FormArray;
-    console.log(a, a.controls);
-    return this.registerForm.get('lotes') as FormArray;
-  }
-
-  get redesSociais(): FormArray {
-    return this.registerForm.get('redesSociais') as FormArray;
-  }
 
   validation() {
     this.registerForm = this.fb.group({
+      // id: [],
       tema: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(50)]],
       local: ['', Validators.required],
       dataEvento: ['', Validators.required],
@@ -103,6 +105,7 @@ export class EventoEditComponent implements OnInit {
 
   public adicionarRedeSocial() {
     this.redesSociais.push(this.criaRedeSocial({ id: 0 }));
+    console.log('Redes: ', this.redesSociais);
   }
 
   public removerRedeSocial(id: number) {
@@ -113,10 +116,40 @@ export class EventoEditComponent implements OnInit {
     this.lotes.removeAt(id);
   }
 
-  public onFileChange(file: FileList) {
+  public onFileChange(evento: any, file: FileList) {
     const reader = new FileReader();
     reader.onload = (event: any) => this.imagemURL = event.target.result;
+    this.file = evento.target.files;
     reader.readAsDataURL(file[0]);
+  }
+
+  public salvarEvento() {
+    if (this.registerForm.valid) {
+      console.log('evento salvar: ', this.evento, this.evento.id);
+      this.evento = Object.assign({ id: this.evento.id }, this.registerForm.value);
+      console.log('evento pós assign: ', this.evento, this.evento.id, this.registerForm.value);
+      this.evento.imagemURL = this.fileNameToUpdate;
+
+      this.uploadImagem();
+
+      this.eventoService.salvarEvento(this.evento, 'editar')
+        .subscribe((novoEvento: Evento) => {
+          this.toastr.success('Evento editado com sucesso!', 'Sucesso');
+        }, error => this.toastr.error('Erro ao salvar informações do evento', 'Erro'));
+    }
+  }
+
+  private uploadImagem() {
+    if (this.registerForm.get('imagemURL').value !== '') {
+      const url = this.imagemURL.split('\\')[2];
+
+      this.eventoService.postUpload(this.file, this.fileNameToUpdate)
+        .subscribe(() => {
+          this.dataAtual = new Date().getMilliseconds().toString();
+          this.imagemURL = `http://localhost:5000/resources/images/${this.evento.imagemURL}?_ts=${this.dataAtual}`;
+        });
+    }
+
   }
 
 }

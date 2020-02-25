@@ -121,5 +121,9 @@ namespace ProAgil.Repository
             return await query.AsNoTracking().OrderBy(p => p.Nome).FirstOrDefaultAsync(p => p.Id == palestranteId);
         }
 
+        public void DeleteRange<T>(T[] entityArray) where T : class
+        {
+            Context.RemoveRange(entityArray);
+        }
     }
 }

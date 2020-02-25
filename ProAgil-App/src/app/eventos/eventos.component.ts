@@ -29,7 +29,8 @@ export class EventosComponent implements OnInit {
   public bodyDeletarEvento: string;
 
   public _filtroLista: string = "";
-
+  public dataAtual: string = '';
+  public fileNameToUpdate: string = '';
   public file: File;
 
   constructor(private eventoService: EventoService
@@ -70,6 +71,7 @@ export class EventosComponent implements OnInit {
   }
 
   getEventos() {
+    this.dataAtual = new Date().getMilliseconds().toString();
     this.eventoService.getEventos()
       .subscribe((_eventos: Evento[]) => {
         this.eventos = _eventos;
@@ -93,9 +95,10 @@ export class EventosComponent implements OnInit {
   }
 
   public editarEvento(template: any, evento: Evento) {
-    this.openModal(template);
     this.modoSalvamento = 'editar';
+    this.openModal(template);
     this.evento = Object.assign({}, evento);
+    this.fileNameToUpdate = evento.imagemURL.toString();
     this.evento.imagemURL = '';
     this.registerForm.patchValue(this.evento);
   }
@@ -112,16 +115,30 @@ export class EventosComponent implements OnInit {
   }
 
   private uploadImagem() {
-    const nomeArquivo = this.evento.imagemURL.split('\\', 3);
-    this.evento.imagemURL = nomeArquivo[2];
+    if (this.modoSalvamento === 'post') {
+      const nomeArquivo = this.evento.imagemURL.split('\\', 3);
+      this.evento.imagemURL = nomeArquivo[2];
 
-    this.eventoService.postUpload(this.file).subscribe();
-
+      this.eventoService.postUpload(this.file, nomeArquivo[2])
+        .subscribe(() => {
+          this.dataAtual = new Date().getMilliseconds().toString();
+          this.getEventos();
+        });
+    }else {
+      this.evento.imagemURL = this.fileNameToUpdate;
+      this.eventoService.postUpload(this.file, this.fileNameToUpdate)
+        .subscribe(() => {
+          this.dataAtual = new Date().getMilliseconds().toString();
+          this.getEventos();
+        });
+    }
   }
 
   public salvarAlteracao(template: any) {
     if (this.registerForm.valid) {
       this.evento = Object.assign({ id: this.evento ? this.evento.id : 0 }, this.registerForm.value);
+
+      this.uploadImagem();
 
       this.eventoService.salvarEvento(this.evento, this.modoSalvamento)
         .subscribe((novoEvento: Evento) => {

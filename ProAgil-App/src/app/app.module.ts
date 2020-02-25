@@ -31,6 +31,7 @@ import { RegistrationComponent } from './user/registration/registration.componen
 import { LoginComponent } from './user/login/login.component';
 import { EventoEditComponent } from './eventos/evento-edit/evento-edit.component';
 import { TabsModule } from 'ngx-bootstrap/tabs';
+import { NgxCurrencyModule } from 'ngx-currency';
 
 @NgModule({
   declarations: [
@@ -61,7 +62,8 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
     BsDatepickerModule.forRoot(),
     ToastrModule.forRoot(),
     TabsModule.forRoot(),
-    NgxMaskModule.forRoot()
+    NgxMaskModule.forRoot(),
+    NgxCurrencyModule
   ],
   providers: [
     EventoService,
@@ -73,4 +75,4 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }
